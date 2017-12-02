@@ -5,3 +5,4 @@ Project for earth dynamics lecture 2017
 - Upper limit for opinion changes for every node
 - Multiple Categories of Opinions, set of parameters with different weights
 - parameter that controls tendency to change opinion
+- adapt your opinion to the majority of your friends' opinions and not to a single one!
