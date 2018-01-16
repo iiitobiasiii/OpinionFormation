@@ -144,7 +144,7 @@ int_array * getSameOpinion(Graph * G, int NIndex)
 {
 
     int_array * bubblepeople = malloc(sizeof(int_array));
-    if (int_array == NULL)
+    if (bubblepeople == NULL)
     {
         printf("Allocation of bubblepeople failed\n");
         return NULL;
@@ -156,12 +156,13 @@ int_array * getSameOpinion(Graph * G, int NIndex)
         return NULL;
     }
     
-    int_array MyFriends = getNeighbors(G, NIndex);
+    int curr_opinion = (G->NList[NIndex]).opinion;
+    int_array * MyFriends = getNeighbors(G, NIndex);
     bubblepeople->len = 0;
     
     for (int i=0; i<NNodes; i++)
     {
-        if( (G->NList[i])->opinion == G->NList[NIndex]->opinion && i != NIndex)
+        if( (G->NList[i]).opinion == curr_opinion && i != NIndex)
         {
             for (int j=0; j<MyFriends->len; j++)
             {
@@ -191,39 +192,39 @@ void process1(Graph * G)
     //Pick random Node from Nodelist
     
     int NodeIndex = rand() %NNodes ;
-    Node * curr_Node = &(G->NList[NodeIndex]);
+    //Node * curr_Node = &(G->NList[NodeIndex]);
 
     //Get its opinion
-    int curr_opinion = curr_Node->opinion;
+    //int curr_opinion = curr_Node->opinion;
     
     //Get Neighbors
     //If no neighbors return
-    int_array Neighbors = getNeighbors(G, NodeIndex);
+    int_array * Neighbors = getNeighbors(G, NodeIndex);
     if (Neighbors->len == 0){
         return;
     }
     
     //PickRandom Neighbor
     int NeighborIndex = rand() %Neighbors->len;
-    old_neighbor = Neighbors->data[NeighborIndex];
+    int old_neighbor = Neighbors->data[NeighborIndex];
     
-    int_array bubblepeople = getSameOpinion(G, NodeIndex);
+    int_array * bubblepeople = getSameOpinion(G, NodeIndex);
     
     //Take ith person that is not yet connected to you but has same opinion
-    new_friend_Bubbleindex = rand () %bubblepeople->len;
+    int new_friend_Bubbleindex = rand () %bubblepeople->len;
 
     //Get index in NList of this person
-    new_friend_index = bubblepeople->data[new_friend_Bubbleindex];
+    int new_friend_index = bubblepeople->data[new_friend_Bubbleindex];
 
     //Delete old neighbor
     G->Adj_Matrix[NodeIndex][old_neighbor] = 0;
-    G->Adj_Matrix[old_neighbor][Node] = 0;
+    G->Adj_Matrix[old_neighbor][NodeIndex] = 0;
 
     //Create new neighbor
     G->Adj_Matrix[NodeIndex][new_friend_index] = 1;
     G->Adj_Matrix[new_friend_index][NodeIndex] = 1;
 
-    free(bubblepeople)
+    free(bubblepeople);
     free(Neighbors);
     //Is whole struct now freed??
 
@@ -240,13 +241,13 @@ void process2(Graph * G)
     //Get its opinion
     int curr_opinion = curr_Node->opinion;
 
-    int_array Neighbors = getNeighbors(G, NodeIndex);
+    int_array * Neighbors = getNeighbors(G, NodeIndex);
     if (Neighbors->len == 0){
         return;
     }
     int ith_Neighbor = rand ()%Neighbors->len;
     int old_friend_index = Neighbors->data[ith_Neighbor];
-    (G->NList[old_friend_index])->opinion = curr_opinion;
+    (G->NList[old_friend_index]).opinion = curr_opinion;
 
     free(Neighbors);
     return;
@@ -260,11 +261,11 @@ int check_consensus(Graph * G)
     {
         int_array * curr_friends = getNeighbors(G, i);
         
-        int curr_opinion = (G->NList[i])->opinion;
+        int curr_opinion = (G->NList[i]).opinion;
 
         for (int j = 0; j < curr_friends->len; ++j)
         {
-            if (G->NList[(curr_friends->data[j])]->opinion != curr_opinion)
+            if ((G->NList[(curr_friends->data[j])]).opinion != curr_opinion)
                 {
                     return 0;
                 }    
@@ -290,22 +291,23 @@ int main()
         printf("\n");
     }
 
-    for (int iter = 0; i< MAX_ITER; i++)
+    for (int iter = 0; iter < MAX_ITER; iter++)
     {
-        if (check_consensus == 1)
+        int check = check_consensus(G);
+        if (check == 1)
         {
             break;
         }
         if ( rand() %100 < phi100 )
         {
-            process1();
+            process1(G);
         }
         else
         {
-            process2();
+            process2(G);
         }
 
     }
-    printf("Finished. \n")
+    printf("Finished. \n");
     return 0;
 }
