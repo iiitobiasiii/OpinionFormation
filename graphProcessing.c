@@ -11,11 +11,11 @@
 #include <math.h>
 #include <time.h>
 
-#define NNodes 4
-#define NEdges 2
+#define NNodes 3200
+#define NEdges 6400
 #define NOpinions 2
-#define phi100 12
-#define MAX_ITER 10000
+#define phi100 30
+#define MAX_ITER 1000000
 
 typedef struct Graph{
     struct Node* NList;
@@ -25,12 +25,7 @@ typedef struct Graph{
 
 typedef struct Node{
     int opinion;
-    struct Node* next;
 } Node;
-
-typedef struct Edge{
-    int sr;
-} Edge;
 
 typedef struct int_array{
     int len;
@@ -66,8 +61,10 @@ Graph * create_graph()
     {
         for(int j=0; j<i; j++)
         {
-            float prob_Edge = 1- (float)(NEdges - Curr_NEdges) / (float)(max_Edges - Curr_NEdges); 
-
+            //prob is Number of remaining edges to initialize / still possible edges
+            k+=1;
+            int remaining_Edges = max_Edges - k;
+            float prob_Edge = (float) (NEdges - Curr_NEdges) / (float) (remaining_Edges);
             int rnd = rand() %(100);
             //printf("rnd: %d , prob: %.2f \n", rnd, prob_Edge);
             if(rnd < (prob_Edge*100))
@@ -80,11 +77,13 @@ Graph * create_graph()
                 G->Adj_Matrix[i][j] = 0;
             }
             G->Adj_Matrix[j][i] = G->Adj_Matrix[i][j];
-            k+=1;
+            
         }
+        G->Adj_Matrix[i][i] = 0;
     }
-    printf("Number of Edges %d\n", Curr_NEdges);
-    printf("Number of MAXEDGE %d\n", max_Edges);
+
+    //printf("Number of Edges %d\n", Curr_NEdges);
+    //printf("Number of MAXEDGE %d\n", max_Edges);
 
     for(int i=0; i<NNodes; i++)
     {  
@@ -95,12 +94,27 @@ Graph * create_graph()
             return NULL;
         }
         new_node -> opinion = rand() %NOpinions;
-        new_node -> next = NULL;
         G->NList[i] = *new_node;
     }
     return G;
 }
 
+void check_graph(Graph * G)
+{
+    int ones = 0;
+    for (int i = 0; i < NNodes; ++i)
+    {
+        for (int j = 0; j < NNodes; ++j)
+        {
+            if (G->Adj_Matrix[i][j] ==1)
+            {
+                ones +=1;
+            }
+        }
+    }
+    printf("Number of 1 entries in Adj_Matrix: %d \n", ones);
+    printf("Should be %d \n", 2*NEdges);
+}
 
 /*needs Graph and Index of a node
  * ouput: List of Indices that correspond to the neighbor nodes of the input node
@@ -131,7 +145,8 @@ int_array * getNeighbors(Graph * G, int NodeIndex)
             Neighborlist->len +=1; 
         }
     }
-    Neighborlist->data = realloc(Neighborlist->data, Neighborlist->len);
+
+    Neighborlist->data = realloc(Neighborlist->data, Neighborlist->len * sizeof(int));
     if (Neighborlist == NULL) {
         printf("Reallocation of Neighborlist failed \n");
         return NULL;
@@ -143,43 +158,68 @@ int_array * getNeighbors(Graph * G, int NodeIndex)
 int_array * getSameOpinion(Graph * G, int NIndex)
 {
 
+    /*Create int_array (Node - Index - List) that contains all the other Nodes that
+    have my opinion but are not yet connected to me */
     int_array * bubblepeople = malloc(sizeof(int_array));
     if (bubblepeople == NULL)
     {
         printf("Allocation of bubblepeople failed\n");
         return NULL;
     }
+
     bubblepeople->data = malloc(NNodes*sizeof(int));
     if (bubblepeople->data == NULL)
     {
         printf("Allocation of bubblepeople data failed \n");
         return NULL;
     }
-    
-    int curr_opinion = (G->NList[NIndex]).opinion;
-    int_array * MyFriends = getNeighbors(G, NIndex);
     bubblepeople->len = 0;
+    
+    //Get My opinion
+    int curr_opinion = (G->NList[NIndex]).opinion;
+
+    //Get My neighbors
+    int_array * MyFriends = getNeighbors(G, NIndex);
+
+    //printf("%d Number of Friends\n", MyFriends->len);
     
     for (int i=0; i<NNodes; i++)
     {
+        //If Opinion of ith Node is my opinion and its not me
         if( (G->NList[i]).opinion == curr_opinion && i != NIndex)
         {
+
+            //Iterate through my friends and check whether it is already included
+            
+            int IsAlreadyMyFriend = 0;
+
             for (int j=0; j<MyFriends->len; j++)
             {
-                if(MyFriends->data[j] != NIndex)
+                if(MyFriends->data[j] == i)
                 {
-                    bubblepeople->data[bubblepeople->len] += 1;
-                    bubblepeople->len+=1;
+                    IsAlreadyMyFriend = 1;
+                    break;
                 }
             
+            }
+            if (IsAlreadyMyFriend == 0)
+            {
+                bubblepeople->data[bubblepeople->len] += 1;
+                bubblepeople->len+=1;
             }
         }
     }
     free(MyFriends);
-    bubblepeople->data = realloc(bubblepeople->data, bubblepeople->len);
+    if (bubblepeople->len == 0)
+    {
+        free(bubblepeople);
+        return NULL;
+    }
+    bubblepeople->data = realloc(bubblepeople->data, bubblepeople->len * sizeof(int));
     if (bubblepeople->data == NULL)
     {
         printf("Reallocation of bubblepeople data failed\n");
+        printf("No space for %d integers \n", bubblepeople->len );
         return NULL;
     }
     return bubblepeople;
@@ -209,6 +249,12 @@ void process1(Graph * G)
     int old_neighbor = Neighbors->data[NeighborIndex];
     
     int_array * bubblepeople = getSameOpinion(G, NodeIndex);
+
+    //Exclude lonely nodes:
+    if (bubblepeople == NULL)
+    {
+        return;
+    }
     
     //Take ith person that is not yet connected to you but has same opinion
     int new_friend_Bubbleindex = rand () %bubblepeople->len;
@@ -257,19 +303,21 @@ void process2(Graph * G)
 /*Think of a more efficient algorithm!!! */
 int check_consensus(Graph * G)
 {
-    for (int i = 0; i < NNodes; ++i)
+    for (int i = 0; i < NNodes; i++)
     {
         int_array * curr_friends = getNeighbors(G, i);
         
         int curr_opinion = (G->NList[i]).opinion;
 
-        for (int j = 0; j < curr_friends->len; ++j)
+        for (int j = 0; j < curr_friends->len; j++)
         {
             if ((G->NList[(curr_friends->data[j])]).opinion != curr_opinion)
                 {
                     return 0;
                 }    
         }
+
+        free(curr_friends);
     }
 
     return 1;
@@ -281,21 +329,24 @@ int main()
     srand(time(NULL));
 
     Graph * G= create_graph();
+    check_graph(G);
 
-    for (int i=0; i<NNodes; i++)
-    {
-        for (int j=0; j<NNodes; j++)
-        {
-        printf("%d", G->Adj_Matrix[i][j]);
-        }
-        printf("\n");
-    }
 
-    for (int iter = 0; iter < MAX_ITER; iter++)
+    // for (int i=0; i<NNodes; i++)
+    // {
+    //     for (int j=0; j<NNodes; j++)
+    //     {
+    //     printf("%d", G->Adj_Matrix[i][j]);
+    //     }
+    //     printf("\n");
+    // }
+    int iter;
+    for (iter = 0; iter < MAX_ITER; iter++)
     {
         int check = check_consensus(G);
         if (check == 1)
         {
+            printf("CONSENSUS STATE\n");
             break;
         }
         if ( rand() %100 < phi100 )
@@ -308,6 +359,6 @@ int main()
         }
 
     }
-    printf("Finished. \n");
+    printf("Finished after %d iterations \n", iter);
     return 0;
 }
