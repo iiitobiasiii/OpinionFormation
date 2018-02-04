@@ -1,5 +1,5 @@
 # OpinionFormation
-Project for earth dynamics lecture 2017
+Project for earth dynamics lecture 2017/2018
 
 #Ideas
 - Upper limit for opinion changes for every node
@@ -11,8 +11,15 @@ Project for earth dynamics lecture 2017
 # Problems?
 - process2 takes random friend at sets it opinion to "my opinion" no matter whether it already is my opinion or not
 
-#C Integration
-- f2py?
-- ctypes?
-- ...
-- Python creates random graph or C? C returns only adjacency matrix of consensus state? Data analysis with python or c?
+
+#C Code:
+Takes as arguments: NNodes, NEdges, NOpinions, phi100, MAX_ITER, ITER_Step, file name (max 20chars)
+exports data into file in ./data/filename.txt
+data has format
+1 line parameters
+2 line: adjacency matrix "0 1 ;1 0" -> " "after every entry, ";" after each row
+3 line: opinion vector (array of length NNodes, each entry represents the opinion attribute of the node in consensus state)
+4 line: connected component vector (array of length NNodes, each entry corresponds to the connected component a node belongs to)
+
+
+
