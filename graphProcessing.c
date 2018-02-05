@@ -89,10 +89,10 @@ Graph * create_graph()
             k+=1;
             int remaining_Edges = max_Edges - k;
             float prob_Edge = (float) (NEdges - Curr_NEdges) / (float) (remaining_Edges);
-            int rnd = rand() %(100);
+            int rnd = rand() %(101);
 
             //if rnd number < prob_Edge then create edge
-            if(rnd < (prob_Edge*100))
+            if(rnd <= (prob_Edge*100))
             {
                G->Adj_Matrix[i][j] = 1; 
                Curr_NEdges +=1 ;
@@ -369,21 +369,16 @@ int_array * getSameOpinion(Graph * G, int NIndex)
     return bubblestranger;
 }
 
+//Function gets Node and Graph and returns all Neighbors that share not its opinion
 
-void process1(Graph * G)
+int_array * GetFalseFriends(Graph *G, int NodeIndex)
 {
-
-    //Pick random Node from Nodelist
-    
-    int NodeIndex = rand() %NNodes ;
     int curr_opinion = G->NList[NodeIndex]->opinion;
-
-    //Get Neighbors
     int_array * Neighbors = getNeighbors(G, NodeIndex);
 
     //return if no neighbors
     if (Neighbors == NULL){
-        return;
+        return NULL;
     }
     
     int_array * FalseFriends = (int_array *)malloc(sizeof(int_array));
@@ -417,6 +412,22 @@ void process1(Graph * G)
     {
         free(FalseFriends->data);
         free(FalseFriends);
+        return NULL;
+    }
+
+    return FalseFriends;
+}
+
+void process1(Graph * G)
+{
+
+    //Pick random Node from Nodelist
+    int NodeIndex = rand() %NNodes ;
+
+    //Get False Friends
+    int_array * FalseFriends = GetFalseFriends(G, NodeIndex);
+    if (FalseFriends == NULL)
+    {
         return;
     }
 
@@ -489,53 +500,15 @@ void process2(Graph * G)
     //Get its opinion
     int curr_opinion = curr_Node->opinion;
 
-    //Get Neighbors
-    int_array * Neighbors = getNeighbors(G, NodeIndex);
-
-    //return if no neighbors
-    if (Neighbors == NULL){
-        return;
-    }
-    
-    int_array * FalseFriends = (int_array *)malloc(sizeof(int_array));
+    //Get False Friends
+    int_array * FalseFriends = GetFalseFriends(G, NodeIndex);
     if (FalseFriends == NULL)
     {
-        exit(1);
-    }
-
-    FalseFriends->data = (int *)malloc(Neighbors->len * sizeof(int));
-    if (FalseFriends->data == NULL)
-    {
-        exit(1);
-    }
-    FalseFriends->len = 0;
-    for (int i = 0; i < Neighbors->len; ++i)
-    {
-        int curr_neighbor_index = Neighbors->data[i];
-        if (G->NList[curr_neighbor_index]->opinion != curr_opinion)
-        {
-            FalseFriends->data[FalseFriends->len] = curr_neighbor_index;
-            FalseFriends->len += 1;
-        }
-    }
-
-
-    free(Neighbors->data);
-    Neighbors->data = NULL;
-    free(Neighbors);
-    Neighbors = NULL;
-
-    if (FalseFriends->len == 0)
-    {
-        free(FalseFriends->data);
-        FalseFriends->data = NULL;
-        free(FalseFriends);
-        FalseFriends = NULL;
         return;
     }
 
-    //Take random neighbor
-    int ith_Neighbor = rand ()%FalseFriends->len;
+    //Take random false friend
+    int ith_Neighbor = rand () %FalseFriends->len;
     int Neighbor = FalseFriends->data[ith_Neighbor];
 
     //Change its opinion to my opinion
@@ -777,7 +750,7 @@ void export_data(Graph * G, int_array * Checklist, int iterations, char* fname)
     //Print parameters
     fprintf(fp, "Nodes: %d, Edges: %d, phi*100: %d, Iterations: %d \n", NNodes, NEdges, phi100, iterations);
     //print adj Matrix
-    for (int i = 0; i < NNodes; ++i)
+    /*for (int i = 0; i < NNodes; ++i)
     {
         for (int j = 0; j < NNodes; ++j)
         {
@@ -785,7 +758,7 @@ void export_data(Graph * G, int_array * Checklist, int iterations, char* fname)
         }
         fprintf(fp, ";");
     }
-    fprintf(fp, "\n");
+    fprintf(fp, "\n");*/
 
     //print Opinions
 
@@ -875,12 +848,13 @@ int main(int argc, char *argv[])
             }
             break;
         }
-        if ( rand() %100 < phi100 )
+        if ( rand() %101 < phi100 )
         {
             process1(G);
         }
         else
         {
+            //printf("process2!!!\n");
             process2(G);
         }
         
