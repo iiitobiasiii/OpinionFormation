@@ -89,17 +89,10 @@ Graph * create_graph()
             k+=1;
             int remaining_Edges = max_Edges - k;
             float prob_Edge = (float) (NEdges - Curr_NEdges) / (float) (remaining_Edges);
-<<<<<<< HEAD
             int rnd = rand() %(101);
 
             //if rnd number < prob_Edge then create edge
             if(rnd <= (prob_Edge*100))
-=======
-            int rnd = rand() %(100);
-
-            //if rnd number < prob_Edge then create edge
-            if(rnd < (prob_Edge*100))
->>>>>>> 940351e30b7dfac25b89891052c7af9b20da0891
             {
                G->Adj_Matrix[i][j] = 1; 
                Curr_NEdges +=1 ;
@@ -376,7 +369,6 @@ int_array * getSameOpinion(Graph * G, int NIndex)
     return bubblestranger;
 }
 
-<<<<<<< HEAD
 //Function gets Node and Graph and returns all Neighbors that share not its opinion
 
 int_array * GetFalseFriends(Graph *G, int NodeIndex)
@@ -425,14 +417,11 @@ int_array * GetFalseFriends(Graph *G, int NodeIndex)
 
     return FalseFriends;
 }
-=======
->>>>>>> 940351e30b7dfac25b89891052c7af9b20da0891
 
 void process1(Graph * G)
 {
 
     //Pick random Node from Nodelist
-<<<<<<< HEAD
     int NodeIndex = rand() %NNodes ;
 
     //Get False Friends
@@ -450,45 +439,16 @@ void process1(Graph * G)
     free(FalseFriends);
     FalseFriends = NULL;
 
-=======
-    
-    int NodeIndex = rand() %NNodes ;
-    
-    //Get Neighbors
-    int_array * Neighbors = getNeighbors(G, NodeIndex);
-
-    //return if no neighbors
-    if (Neighbors == NULL){
-        return;
-    }
-    
-
-    //PickRandom Neighbor
-    int NeighborIndex = rand() %Neighbors->len;
-    int old_neighbor = Neighbors->data[NeighborIndex];
->>>>>>> 940351e30b7dfac25b89891052c7af9b20da0891
     
     int_array * bubblepeople = getSameOpinion(G, NodeIndex);
 
     //Exclude lonely nodes:
     if (bubblepeople == NULL)
     {
-<<<<<<< HEAD
-=======
-        free(Neighbors->data);
-        Neighbors->data = NULL;
-        free(Neighbors);
-        Neighbors = NULL;
->>>>>>> 940351e30b7dfac25b89891052c7af9b20da0891
         return;
     }
     if (bubblepeople->data == NULL)
     {
-<<<<<<< HEAD
-=======
-        free(Neighbors);
-        Neighbors = NULL;
->>>>>>> 940351e30b7dfac25b89891052c7af9b20da0891
         free(bubblepeople);
         bubblepeople = NULL;
         return;
@@ -496,13 +456,6 @@ void process1(Graph * G)
 
     if (bubblepeople->len == 0)
     {
-<<<<<<< HEAD
-=======
-        free(Neighbors->data);
-        Neighbors->data = NULL;
-        free(Neighbors);
-        Neighbors = NULL;
->>>>>>> 940351e30b7dfac25b89891052c7af9b20da0891
         free(bubblepeople->data);
         bubblepeople->data = NULL;
         free(bubblepeople);
@@ -528,14 +481,7 @@ void process1(Graph * G)
     G->Adj_Matrix[NodeIndex][new_friend_index] = 1;
     G->Adj_Matrix[new_friend_index][NodeIndex] = 1;
 
-<<<<<<< HEAD
     
-=======
-    free(Neighbors->data);
-    Neighbors->data = NULL;
-    free(Neighbors);
-    Neighbors = NULL;
->>>>>>> 940351e30b7dfac25b89891052c7af9b20da0891
     free(bubblepeople->data);
     bubblepeople->data = NULL;
     free(bubblepeople);
@@ -554,43 +500,24 @@ void process2(Graph * G)
     //Get its opinion
     int curr_opinion = curr_Node->opinion;
 
-<<<<<<< HEAD
     //Get False Friends
     int_array * FalseFriends = GetFalseFriends(G, NodeIndex);
     if (FalseFriends == NULL)
-=======
-    //Get its neighbors
-    int_array * Neighbors = getNeighbors(G, NodeIndex);
-    if (Neighbors == NULL)
->>>>>>> 940351e30b7dfac25b89891052c7af9b20da0891
     {
         return;
     }
 
-<<<<<<< HEAD
     //Take random false friend
     int ith_Neighbor = rand () %FalseFriends->len;
     int Neighbor = FalseFriends->data[ith_Neighbor];
-=======
-    //Take random neighbor
-    int ith_Neighbor = rand ()%Neighbors->len;
-    int Neighbor = Neighbors->data[ith_Neighbor];
->>>>>>> 940351e30b7dfac25b89891052c7af9b20da0891
 
     //Change its opinion to my opinion
     (G->NList[Neighbor])->opinion = curr_opinion;
 
-<<<<<<< HEAD
     free(FalseFriends->data);
     FalseFriends->data = NULL;
     free(FalseFriends);
     FalseFriends = NULL;
-=======
-    free(Neighbors->data);
-    Neighbors->data = NULL;
-    free(Neighbors);
-    Neighbors = NULL;
->>>>>>> 940351e30b7dfac25b89891052c7af9b20da0891
     return;
 }
 
@@ -823,11 +750,7 @@ void export_data(Graph * G, int_array * Checklist, int iterations, char* fname)
     //Print parameters
     fprintf(fp, "Nodes: %d, Edges: %d, phi*100: %d, Iterations: %d \n", NNodes, NEdges, phi100, iterations);
     //print adj Matrix
-<<<<<<< HEAD
     /*for (int i = 0; i < NNodes; ++i)
-=======
-    for (int i = 0; i < NNodes; ++i)
->>>>>>> 940351e30b7dfac25b89891052c7af9b20da0891
     {
         for (int j = 0; j < NNodes; ++j)
         {
@@ -835,11 +758,7 @@ void export_data(Graph * G, int_array * Checklist, int iterations, char* fname)
         }
         fprintf(fp, ";");
     }
-<<<<<<< HEAD
     fprintf(fp, "\n");*/
-=======
-    fprintf(fp, "\n");
->>>>>>> 940351e30b7dfac25b89891052c7af9b20da0891
 
     //print Opinions
 
@@ -874,7 +793,6 @@ int main(int argc, char *argv[])
     MAX_ITER = atoi(argv[5]);
     int ITER_Step = atoi(argv[6]);
     char* fname = argv[7];
-<<<<<<< HEAD
     int max_Edges = (NNodes * (NNodes -1))/2;
 
     if (NOpinions>NNodes || NEdges > max_Edges || phi100 > 100)
@@ -892,8 +810,6 @@ int main(int argc, char *argv[])
         printf("Check input parameters!\n");
         return 1;
     }
-=======
->>>>>>> 940351e30b7dfac25b89891052c7af9b20da0891
 
     clock_t begin = clock();
     //For Random Numbers
@@ -932,20 +848,13 @@ int main(int argc, char *argv[])
             }
             break;
         }
-<<<<<<< HEAD
         if ( rand() %101 < phi100 )
-=======
-        if ( rand() %100 < phi100 )
->>>>>>> 940351e30b7dfac25b89891052c7af9b20da0891
         {
             process1(G);
         }
         else
         {
-<<<<<<< HEAD
             //printf("process2!!!\n");
-=======
->>>>>>> 940351e30b7dfac25b89891052c7af9b20da0891
             process2(G);
         }
         
