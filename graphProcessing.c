@@ -376,7 +376,8 @@ void process1(Graph * G)
     //Pick random Node from Nodelist
     
     int NodeIndex = rand() %NNodes ;
-    
+    int curr_opinion = G->NList[NodeIndex]->opinion;
+
     //Get Neighbors
     int_array * Neighbors = getNeighbors(G, NodeIndex);
 
@@ -385,26 +386,58 @@ void process1(Graph * G)
         return;
     }
     
+    int_array * FalseFriends = (int_array *)malloc(sizeof(int_array));
+    if (FalseFriends == NULL)
+    {
+        exit(1);
+    }
 
-    //PickRandom Neighbor
-    int NeighborIndex = rand() %Neighbors->len;
-    int old_neighbor = Neighbors->data[NeighborIndex];
+    FalseFriends->data = (int *)malloc(Neighbors->len * sizeof(int));
+    if (FalseFriends->data == NULL)
+    {
+        exit(1);
+    }
+    FalseFriends->len = 0;
+    for (int i = 0; i < Neighbors->len; ++i)
+    {
+        int curr_neighbor_index = Neighbors->data[i];
+        if (G->NList[curr_neighbor_index]->opinion != curr_opinion)
+        {
+            FalseFriends->data[FalseFriends->len] = curr_neighbor_index;
+            FalseFriends->len += 1;
+        }
+    }
+
+    free(Neighbors->data);
+    Neighbors->data = NULL;
+    free(Neighbors);
+    Neighbors = NULL;
+
+    if (FalseFriends->len == 0)
+    {
+        free(FalseFriends->data);
+        free(FalseFriends);
+        return;
+    }
+
+    int NeighborIndex = rand() %FalseFriends->len;
+    int old_neighbor = FalseFriends->data[NeighborIndex];
+
+    free(FalseFriends->data);
+    FalseFriends = NULL;
+    free(FalseFriends);
+    FalseFriends = NULL;
+
     
     int_array * bubblepeople = getSameOpinion(G, NodeIndex);
 
     //Exclude lonely nodes:
     if (bubblepeople == NULL)
     {
-        free(Neighbors->data);
-        Neighbors->data = NULL;
-        free(Neighbors);
-        Neighbors = NULL;
         return;
     }
     if (bubblepeople->data == NULL)
     {
-        free(Neighbors);
-        Neighbors = NULL;
         free(bubblepeople);
         bubblepeople = NULL;
         return;
@@ -412,10 +445,6 @@ void process1(Graph * G)
 
     if (bubblepeople->len == 0)
     {
-        free(Neighbors->data);
-        Neighbors->data = NULL;
-        free(Neighbors);
-        Neighbors = NULL;
         free(bubblepeople->data);
         bubblepeople->data = NULL;
         free(bubblepeople);
@@ -441,10 +470,7 @@ void process1(Graph * G)
     G->Adj_Matrix[NodeIndex][new_friend_index] = 1;
     G->Adj_Matrix[new_friend_index][NodeIndex] = 1;
 
-    free(Neighbors->data);
-    Neighbors->data = NULL;
-    free(Neighbors);
-    Neighbors = NULL;
+    
     free(bubblepeople->data);
     bubblepeople->data = NULL;
     free(bubblepeople);
@@ -463,24 +489,62 @@ void process2(Graph * G)
     //Get its opinion
     int curr_opinion = curr_Node->opinion;
 
-    //Get its neighbors
+    //Get Neighbors
     int_array * Neighbors = getNeighbors(G, NodeIndex);
-    if (Neighbors == NULL)
-    {
+
+    //return if no neighbors
+    if (Neighbors == NULL){
         return;
     }
+    
+    int_array * FalseFriends = (int_array *)malloc(sizeof(int_array));
+    if (FalseFriends == NULL)
+    {
+        exit(1);
+    }
 
-    //Take random neighbor
-    int ith_Neighbor = rand ()%Neighbors->len;
-    int Neighbor = Neighbors->data[ith_Neighbor];
+    FalseFriends->data = (int *)malloc(Neighbors->len * sizeof(int));
+    if (FalseFriends->data == NULL)
+    {
+        exit(1);
+    }
+    FalseFriends->len = 0;
+    for (int i = 0; i < Neighbors->len; ++i)
+    {
+        int curr_neighbor_index = Neighbors->data[i];
+        if (G->NList[curr_neighbor_index]->opinion != curr_opinion)
+        {
+            FalseFriends->data[FalseFriends->len] = curr_neighbor_index;
+            FalseFriends->len += 1;
+        }
+    }
 
-    //Change its opinion to my opinion
-    (G->NList[Neighbor])->opinion = curr_opinion;
 
     free(Neighbors->data);
     Neighbors->data = NULL;
     free(Neighbors);
     Neighbors = NULL;
+
+    if (FalseFriends->len == 0)
+    {
+        free(FalseFriends->data);
+        FalseFriends->data = NULL;
+        free(FalseFriends);
+        FalseFriends = NULL;
+        return;
+    }
+
+    //Take random neighbor
+    int ith_Neighbor = rand ()%FalseFriends->len;
+    int Neighbor = FalseFriends->data[ith_Neighbor];
+
+    //Change its opinion to my opinion
+    (G->NList[Neighbor])->opinion = curr_opinion;
+
+    free(FalseFriends->data);
+    FalseFriends->data = NULL;
+    free(FalseFriends);
+    FalseFriends = NULL;
     return;
 }
 
@@ -756,6 +820,23 @@ int main(int argc, char *argv[])
     MAX_ITER = atoi(argv[5]);
     int ITER_Step = atoi(argv[6]);
     char* fname = argv[7];
+    int max_Edges = (NNodes * (NNodes -1))/2;
+
+    if (NOpinions>NNodes || NEdges > max_Edges || phi100 > 100)
+    {
+        if (NOpinions>NNodes)
+        {
+            printf("NO > NN\n");
+        }
+        if (NEdges > 1/2*(NNodes - 1)*NNodes)
+        {
+            printf("NNodes: %d \n", NNodes);
+            printf("NEdges = %d, but max_Edges = %d \n", NEdges, max_Edges);
+            printf("Too many edges\n");
+        }
+        printf("Check input parameters!\n");
+        return 1;
+    }
 
     clock_t begin = clock();
     //For Random Numbers
