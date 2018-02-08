@@ -76,93 +76,53 @@ Graph * create_graph()
         }
     }    
 
-   /* For creating Random edges we use the following procedure: 
-    * We have in general max_Edges = 1/2 * NNodes * (NNodes - 1) possible edges while only NEdges allowed
-    * We iterize over all node pairs and connect them with probability prob_Edge
-    */
 
-/*    int Curr_NEdges = 0;
-    int max_Edges = (NNodes * (NNodes -1))/2;
-    int k=0;
-    for(int i=0; i<NNodes; i++)
+    int Curr_NEdges = 0;
+    while(Curr_NEdges < NEdges)
     {
-        for(int j=0; j<i; j++)
+        int rnd_i = rand() %NNodes;
+        if (rnd_i == 0)
         {
-            //prob is Number of remaining edges to initialize / still possible edges
-            k+=1;
-            int remaining_Edges = max_Edges - k;
-            float prob_Edge = (float) (NEdges - Curr_NEdges) / (float) (remaining_Edges);
-            int rnd = rand() %(101);
-
-            //if rnd number < prob_Edge then create edge
-            if(rnd <= (prob_Edge*100))
-            {
-               G->Adj_Matrix[i][j] = 1; 
-               Curr_NEdges +=1 ;
-            }
-
-            //else no connection
-            else
-            {
-                G->Adj_Matrix[i][j] = 0;
-            }
-
-            //symmetrize adjacency matrix
-            G->Adj_Matrix[j][i] = G->Adj_Matrix[i][j];
-            
+            continue;
         }
-        //No Self-loops
-        G->Adj_Matrix[i][i] = 0;
-    }*/
+        int rnd_j = rand() %rnd_i;
+        if (rnd_i == rnd_j)
+        {
+            printf("%d - %d \n", rnd_i, rnd_j);
+            exit(1);
+        }
+        if (G->Adj_Matrix[rnd_i][rnd_j] == 0)
+        {
+            G->Adj_Matrix[rnd_i][rnd_j] = 1;
+            G->Adj_Matrix[rnd_j][rnd_i] = 1;
+            Curr_NEdges += 1;
+            //printf("Curr %d \n", Curr_NEdges);
+        }
+    }
 
-
-/*    for (int i = 0; i < NNodes; ++i)
+/*    printf("Check Graph\n");
+    int count = 0;
+    for (int i = 0; i < NNodes; ++i)
     {
         for (int j = 0; j < NNodes; ++j)
         {
+            if (G->Adj_Matrix[i][j] != G->Adj_Matrix[i][j])
+            {
+                printf("GRAPH ERROR\n");
+                return NULL;
+            }
             if (G->Adj_Matrix[i][j] == 1)
             {
-                printf("Calloc failed\n");
-                exit(1);
+                count+=1;
             }
-        }
-    }*/
-
-    int max_Edges = (NNodes * (NNodes -1))/2;
-    int Curr_NEdges = 0;
-    printf("NEdges %d\n", NEdges);
-    printf("Max Edges %d\n", max_Edges );
-    float prob = 100 * (float)NEdges/(float)max_Edges;
-    printf("prob %.2f\n", prob);
-
-    while(Curr_NEdges != NEdges)
-        {
-            for (int i = 0; i < NNodes; ++i)
+            if (G->Adj_Matrix[i][i] == 1)
             {
-                for (int j = 0; j < i; ++j)
-                {
-                    if (Curr_NEdges == NEdges)
-                    {
-                        break;
-                    }
-
-                    int rnd = rand()%101;
-
-                    if (rnd < prob)
-                    {
-                        G->Adj_Matrix[i][j] = 1;
-                        G->Adj_Matrix[j][i] = 1;
-                        Curr_NEdges += 1;
-                    }
-                }
-
-                if (Curr_NEdges == NEdges)
-                    {
-                        break;
-                    }
+                printf("Diagonal Error\n");
+                return NULL;
             }
         }
-        printf("CREATED\n");
+        printf("count: %d\n", count);
+    }*/
 
     for(int i=0; i<NNodes; i++)
     {  
@@ -301,10 +261,14 @@ int_array * NodesOfDegreeK(Graph * G, int K)
 }
 
 
-/*
+/*Function that manipulates the opinion of "NInfluencer" Nodes of Degree "InfDegree" to the opinion "Opinion"
+* InfDegree = -2 -> Take Random Nodes
+* InfDegree = -1 -> Take Nodes with max degree
+* Returns int_array of length NInfluencer that contains the indices of the Influencer Nodes
 */
 int_array * Op_Manipulate(Graph * G, int NInfluencer, int Opinion, int InfDegree)
 {
+    //Create int_array
     int_array * Influencer = (int_array *) malloc(sizeof(int_array));
 
     if (Influencer == NULL)
@@ -321,7 +285,6 @@ int_array * Op_Manipulate(Graph * G, int NInfluencer, int Opinion, int InfDegree
         Influencer = NULL;
         return NULL;
     }
-
     Influencer->len = 0;
     
     //InfDegree = -2 means, get random influencer
@@ -340,11 +303,14 @@ int_array * Op_Manipulate(Graph * G, int NInfluencer, int Opinion, int InfDegree
                 }
                 Influencer->data[Influencer->len] = choice;
                 G->NList[choice]->isInfluencer = 1;
+                G->NList[choice]-> opinion = Opinion;
                 Influencer->len +=1;
             }
         }
         return Influencer;
     }
+
+    
     //Create Array with all degrees 
     int * connectivity = (int *)calloc(NNodes, sizeof(int));
     if (connectivity == NULL)
@@ -380,6 +346,7 @@ int_array * Op_Manipulate(Graph * G, int NInfluencer, int Opinion, int InfDegree
             {
                 Influencer->data[j] = curr_index;
                 G->NList[curr_index]->isInfluencer = 1;
+                G->NList[curr_index]-> opinion = Opinion;
                 curr_index = -1;
                 //Delete max_value from connectivity list to get the 2nd (3rd...) max value the next tim
                 connectivity[curr_index] = 0;
@@ -451,6 +418,7 @@ int_array * Op_Manipulate(Graph * G, int NInfluencer, int Opinion, int InfDegree
                             }
                             Influencer->data[Influencer->len] = choice;
                             G->NList[choice]->isInfluencer = 1;
+                            G->NList[choice]->opinion = Opinion;
                             Influencer->len += 1;
                         }
                         else
@@ -553,55 +521,6 @@ int_array * getNeighbors(Graph * G, int NodeIndex)
     }
     return Neighborlist;
 }
-
-
-/*int_array * getNeighbors2(Graph * G, int NodeIndex)
-{
-    int temp_Neighbors[NNodes] = {0};
-    int length = 0;
-
-    for (int i=0; i<NNodes; i++)
-    {
-        if (G->Adj_Matrix[NodeIndex][i] == 1)
-        {
-            temp_Neighbors[length] = i;
-            length +=1; 
-        }
-    }
-    
-    if (length == 0)
-    {
-        return NULL;
-    }
-    int_array * Neighborlist = (int_array *) malloc(sizeof(int_array));
-
-    if (Neighborlist == NULL)
-    {
-        printf("Allocation of Nehborlist failed \n");
-        exit(0);
-        return NULL;
-    }
-
-    Neighborlist->data = (int *) malloc(length * sizeof(int));
-    if (Neighborlist->data == NULL)
-    {
-        printf("Allocation of Neighborlist failed \n");
-        free(Neighborlist);
-        Neighborlist = NULL;
-        exit(0);
-        return NULL;
-    }
-
-    for (int i = 0; i < length; ++i)
-    {
-        Neighborlist->data[i] = temp_Neighbors[i];
-    }
-
-    Neighborlist->len = length;
-
-    return Neighborlist;
-}*/
-
 
 //Returns int_array with all Nodes that are not yet connected but share the opinion
 int_array * getSameOpinion(Graph * G, int NIndex)
@@ -838,23 +757,29 @@ void process2(Graph * G)
     int Neighbor = -1;
     while (Neighbor == -1)
     {
+        //Get random false friend
         int ith_Neighbor = rand () %FalseFriends->len;
-        int Neighbor = FalseFriends->data[ith_Neighbor];
+        Neighbor = FalseFriends->data[ith_Neighbor];
+
+        //Check if it is an influencer
         if (G->NList[Neighbor]->isInfluencer == 1)
         {   
+            //Set Neighbor in FalseFriendlist to -1
+            printf("Influencer friend\n");
             FalseFriends->data[ith_Neighbor] = -1;
-        }
-        for (int i = 0; i < FalseFriends->len; ++i)
-        {
-            if (FalseFriends->data[i] != -1)
+            //Iterate through false friends
+            for (int i = 0; i < FalseFriends->len; ++i)
             {
-                continue;
+                if (FalseFriends->data[i] != -1)
+                {
+                    continue;
+                }
             }
+        printf("All friends are influencers :O \n");
+        return;
         }
-        return ;
+        
     }
-    
-
     
 
     //Change its opinion to my opinion
@@ -1126,10 +1051,12 @@ void export_data(Graph * G, int_array * Checklist, int iterations, char* fname, 
     update_degrees(G);
     if (Influencer != NULL)
     {
+        fprintf(fp, "inf data:\n");
         for (int i = 0; i < Influencer->len; ++i)
             {
                 int curr_deg = G->NList[(Influencer->data[i])]->degree;
-                fprintf(fp, "%d ", curr_deg);
+                int curr_op = G->NList[Influencer->data[i]]->opinion;
+                fprintf(fp, "%d : degree %d, opinion %d ", Influencer->data[i], curr_deg, curr_op);
             }    
         fprintf(fp, "\n");
     }
@@ -1196,14 +1123,24 @@ int main(int argc, char *argv[])
 
     Graph * G= create_graph();
     //check_graph(G);
+    printf("Graph created \n");
 
     int_array * Influencer = NULL;
     if (manip == 1)
     {
         Influencer = Op_Manipulate(G, NInf, InfOp, InfD);
+        printf("Influencer set\n");
     }
-    
 
+    if (Influencer != NULL)
+    {
+        for (int i = 0; i < Influencer->len; ++i)
+        {
+            Node * curr_infl = G->NList[Influencer->data[i]];
+            printf("Inf: %d, deg %d op: %d \n", Influencer->data[i], curr_infl->degree, curr_infl->opinion );
+        }
+    }
+    printf("Iteration starts\n");
     int iter;
     for (iter = 0; iter < MAX_ITER; iter++)
     {
@@ -1235,11 +1172,13 @@ int main(int argc, char *argv[])
         if ( rand() %101 < phi100 )
         {
             process1(G);
+            //printf("1 \n");
         }
         else
         {
             //printf("process2!!!\n");
             process2(G);
+            //printf("2 \n");
         }
         
 
