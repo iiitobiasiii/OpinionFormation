@@ -20,7 +20,7 @@
 int NNodes;
 int NEdges;
 int NOpinions;
-int phi100;
+float phi;
 int MAX_ITER;
 
 typedef struct Graph{
@@ -77,28 +77,34 @@ Graph * create_graph()
     }    
 
 
+    //gesetzte Kanten
     int Curr_NEdges = 0;
+
+    //Bis alle Kanten gesetzt
     while(Curr_NEdges < NEdges)
     {
+        //Beschränkung auf unteren Diagnoalmatrix
+        //Random Zahl für Zeilenindex
         int rnd_i = rand() %NNodes;
+        
+        //0 Ausschließen, da die 0.te Zeile nur den Diagonaleintrag in der unteren Diagonalmatrix hat
         if (rnd_i == 0)
         {
             continue;
         }
+        //Random Zahl für Spaltenindex, wobei Spaltenindex < Zeilenindex für Zelle in unterer Diagonalmatrix
         int rnd_j = rand() %rnd_i;
-        if (rnd_i == rnd_j)
-        {
-            printf("%d - %d \n", rnd_i, rnd_j);
-            exit(1);
-        }
+
+        //Falls die zufällige Zelle noch auf 0 (keine Kante)
         if (G->Adj_Matrix[rnd_i][rnd_j] == 0)
         {
+            //setze Kante
             G->Adj_Matrix[rnd_i][rnd_j] = 1;
             G->Adj_Matrix[rnd_j][rnd_i] = 1;
             Curr_NEdges += 1;
-            //printf("Curr %d \n", Curr_NEdges);
         }
     }
+
 
 /*    printf("Check Graph\n");
     int count = 0;
@@ -290,7 +296,7 @@ int_array * Op_Manipulate(Graph * G, int NInfluencer, int Opinion, int InfDegree
     //InfDegree = -2 means, get random influencer
     if (InfDegree == -2)
     {
-        
+        //As long as not enough Influencers
         while(Influencer->len != NInfluencer)
         {
             int choice = rand()%NNodes;
@@ -310,7 +316,7 @@ int_array * Op_Manipulate(Graph * G, int NInfluencer, int Opinion, int InfDegree
         return Influencer;
     }
 
-    
+
     //Create Array with all degrees 
     int * connectivity = (int *)calloc(NNodes, sizeof(int));
     if (connectivity == NULL)
@@ -378,6 +384,8 @@ int_array * Op_Manipulate(Graph * G, int NInfluencer, int Opinion, int InfDegree
                     }
                 }
                 Influencer->data[Influencer->len] = choice;
+                G->NList[choice]->opinion = Opinion;
+                G->NList[choice]-> isInfluencer = 1;
                 Influencer->len += 1;
             }
             free(DegreeK->data);
@@ -1019,7 +1027,7 @@ void export_data(Graph * G, int_array * Checklist, int iterations, char* fname, 
 4. Checklist
 */
     //Print parameters
-    fprintf(fp, "Nodes: %d, Edges: %d, phi*100: %d, Iterations: %d \n", NNodes, NEdges, phi100, iterations);
+    fprintf(fp, "Nodes: %d, Edges: %d, phi: %.3f, Iterations: %d \n", NNodes, NEdges, phi, iterations);
     //print adj Matrix
     /*for (int i = 0; i < NNodes; ++i)
     {
@@ -1068,13 +1076,13 @@ int main(int argc, char *argv[])
 {
     if (argc != 11 || strlen(argv[7]) > 20)
     {
-        printf("Call function with arguments: NNodes, NEdges, NOpinions, phi100, MAX_ITER, ITER_Step, file name shorter than 20char, Manip Boolean, Number Influencer, Influencer Degree\n");
+        printf("Call function with arguments: NNodes, NEdges, NOpinions, phi, MAX_ITER, ITER_Step, file name shorter than 20char, Manip Boolean, Number Influencer, Influencer Degree\n");
         exit(0);
     }
     NNodes = atoi(argv[1]);
     NEdges = atoi(argv[2]);
     NOpinions = atoi(argv[3]);
-    phi100 = atoi(argv[4]);
+    phi = atof(argv[4]);
     MAX_ITER = atoi(argv[5]);
     int ITER_Step = atoi(argv[6]);
     char* fname = argv[7];
@@ -1095,7 +1103,7 @@ int main(int argc, char *argv[])
         return 1;
 
     }
-    if (NOpinions>NNodes || NEdges > max_Edges || phi100 > 100)
+    if (NOpinions>NNodes || NEdges > max_Edges || phi*100 > 100)
     {
         if (NOpinions>NNodes)
         {
@@ -1169,7 +1177,7 @@ int main(int argc, char *argv[])
             }
             break;
         }
-        if ( rand() %101 < phi100 )
+        if ( rand() %101 < phi*100 )
         {
             process1(G);
             //printf("1 \n");
