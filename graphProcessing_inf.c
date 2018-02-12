@@ -336,10 +336,13 @@ int_array * Op_Manipulate(Graph * G, int NInfluencer, int Opinion, int InfDegree
     //InfDegre = -1 means get the NInfluencer Nodes with highest connectivity
     if (InfDegree == -1)
     {
-        for (int j = 0; j < NInfluencer; ++j)
+
+        while(Influencer->len < NInfluencer)
         {
             int max = 0;
             int curr_index = -1;
+
+            //Get maximum of connectivity list
             for (int i = 0; i < NNodes; ++i)
             {
                 if (max < connectivity[i])
@@ -348,14 +351,25 @@ int_array * Op_Manipulate(Graph * G, int NInfluencer, int Opinion, int InfDegree
                     curr_index = i;
                 }
             }
-            if (max != 0)
+
+            if (max != 0 )
             {
-                Influencer->data[j] = curr_index;
+                //Store new influencer
+                Influencer->data[Influencer->len] = curr_index;
+                Influencer->len += 1;
+
+                //Adapt Node parameters
                 G->NList[curr_index]->isInfluencer = 1;
                 G->NList[curr_index]-> opinion = Opinion;
-                curr_index = -1;
                 //Delete max_value from connectivity list to get the 2nd (3rd...) max value the next tim
                 connectivity[curr_index] = 0;
+                //reset 
+                curr_index = -1;
+            }
+            else
+            {
+                printf("No Edge in graph or too many influencers\n");
+                exit(1);
             }
         }
     }
@@ -689,42 +703,47 @@ void process1(Graph * G)
     int old_neighbor = FalseFriends->data[NeighborIndex];
 
     free(FalseFriends->data);
-    FalseFriends = NULL;
+    FalseFriends->data = NULL;
     free(FalseFriends);
     FalseFriends = NULL;
 
     
-    int_array * bubblepeople = getSameOpinion(G, NodeIndex);
+    int_array * SameOpinion = getSameOpinion(G, NodeIndex);
 
     //Exclude lonely nodes:
-    if (bubblepeople == NULL)
+    if (SameOpinion == NULL)
     {
         return;
     }
-    if (bubblepeople->data == NULL)
+    if (SameOpinion->data == NULL)
     {
-        free(bubblepeople);
-        bubblepeople = NULL;
+        free(SameOpinion);
+        SameOpinion = NULL;
         return;
     }
 
-    if (bubblepeople->len == 0)
+    if (SameOpinion->len == 0)
     {
-        free(bubblepeople->data);
-        bubblepeople->data = NULL;
-        free(bubblepeople);
-        bubblepeople = NULL;
+        free(SameOpinion->data);
+        SameOpinion->data = NULL;
+        free(SameOpinion);
+        SameOpinion = NULL;
         return;
     }
     
     //Take ith person that is not yet connected to you but has same opinion
-    int new_friend_Bubbleindex = rand () %bubblepeople->len;
+    int maybe_friend = rand () %SameOpinion->len;
 
     int new_friend_index = -1;
-    if (bubblepeople->data[new_friend_Bubbleindex] > -1)
+    if (SameOpinion->data[maybe_friend] > -1)
         {
-            new_friend_index = bubblepeople->data[new_friend_Bubbleindex];
+            new_friend_index = SameOpinion->data[maybe_friend];
         }
+    else
+    {
+        printf("FATAL ERROR\n");
+        exit(1);
+    }
     //Get index in NList of this person
     
     //Delete old neighbor
@@ -736,10 +755,10 @@ void process1(Graph * G)
     G->Adj_Matrix[new_friend_index][NodeIndex] = 1;
 
     
-    free(bubblepeople->data);
-    bubblepeople->data = NULL;
-    free(bubblepeople);
-    bubblepeople = NULL;
+    free(SameOpinion->data);
+    SameOpinion->data = NULL;
+    free(SameOpinion);
+    SameOpinion = NULL;
 
 
     return;
@@ -773,7 +792,7 @@ void process2(Graph * G)
         if (G->NList[Neighbor]->isInfluencer == 1)
         {   
             //Set Neighbor in FalseFriendlist to -1
-            printf("Influencer friend\n");
+            //printf("Influencer friend\n");
             FalseFriends->data[ith_Neighbor] = -1;
             //Iterate through false friends
             for (int i = 0; i < FalseFriends->len; ++i)
@@ -783,7 +802,7 @@ void process2(Graph * G)
                     continue;
                 }
             }
-        printf("All friends are influencers :O \n");
+        //printf("All friends are influencers :O \n");
         return;
         }
         
@@ -1018,7 +1037,7 @@ void export_data(Graph * G, int_array * Checklist, int iterations, char* fname, 
     strcpy(str, "./data/");
     strcat(str, fname);
     strcat(str, ".txt");
-    printf("Data written to %s\n", str);
+    //printf("Data written to %s\n", str);
     FILE *fp = fopen(str,"a");
 /*Vier Zeilen:
 1. Zeile Input Parameter
@@ -1027,7 +1046,7 @@ void export_data(Graph * G, int_array * Checklist, int iterations, char* fname, 
 4. Checklist
 */
     //Print parameters
-    fprintf(fp, "Nodes: %d, Edges: %d, phi: %.3f, Iterations: %d \n", NNodes, NEdges, phi, iterations);
+    fprintf(fp, "Nodes: %d, Edges: %d, phi: %.3f, Iterations: %d, Influencer: %d \n", NNodes, NEdges, phi, iterations, Influencer->len);
     //print adj Matrix
     /*for (int i = 0; i < NNodes; ++i)
     {
@@ -1059,15 +1078,15 @@ void export_data(Graph * G, int_array * Checklist, int iterations, char* fname, 
     update_degrees(G);
     if (Influencer != NULL)
     {
-        fprintf(fp, "inf data:\n");
+        //fprintf(fp, "inf data: %d \n", Influencer->len);
         for (int i = 0; i < Influencer->len; ++i)
             {
-                int curr_deg = G->NList[(Influencer->data[i])]->degree;
-                int curr_op = G->NList[Influencer->data[i]]->opinion;
-                fprintf(fp, "%d : degree %d, opinion %d ", Influencer->data[i], curr_deg, curr_op);
+                //int curr_deg = G->NList[(Influencer->data[i])]->degree;
+                //int curr_op = G->NList[Influencer->data[i]]->opinion;
+                fprintf(fp, "%d ", Influencer->data[i]);
             }    
-        fprintf(fp, "\n");
     }
+    fprintf(fp, "\n");
 
     fclose(fp);
 }
@@ -1131,24 +1150,24 @@ int main(int argc, char *argv[])
 
     Graph * G= create_graph();
     //check_graph(G);
-    printf("Graph created \n");
+    //printf("Graph created \n");
 
     int_array * Influencer = NULL;
     if (manip == 1)
     {
         Influencer = Op_Manipulate(G, NInf, InfOp, InfD);
-        printf("Influencer set\n");
+        //printf("Influencer set\n");
     }
 
-    if (Influencer != NULL)
+  /*  if (Influencer != NULL)
     {
         for (int i = 0; i < Influencer->len; ++i)
         {
             Node * curr_infl = G->NList[Influencer->data[i]];
-            printf("Inf: %d, deg %d op: %d \n", Influencer->data[i], curr_infl->degree, curr_infl->opinion );
+            //printf("Inf: %d, deg %d op: %d \n", Influencer->data[i], curr_infl->degree, curr_infl->opinion );
         }
-    }
-    printf("Iteration starts\n");
+    }*/
+    //printf("Iteration starts\n");
     int iter;
     for (iter = 0; iter < MAX_ITER; iter++)
     {
