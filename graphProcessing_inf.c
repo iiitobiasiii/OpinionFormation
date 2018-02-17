@@ -1046,7 +1046,14 @@ void export_data(Graph * G, int_array * Checklist, int iterations, char* fname, 
 4. Checklist
 */
     //Print parameters
-    fprintf(fp, "Nodes: %d, Edges: %d, phi: %.3f, Iterations: %d, Influencer: %d \n", NNodes, NEdges, phi, iterations, Influencer->len);
+    if (Influencer != NULL)
+    {
+        fprintf(fp, "Nodes: %d, Edges: %d, phi: %.3f, Iterations: %d, Influencer: %d \n", NNodes, NEdges, phi, iterations, Influencer->len);
+    }
+    else
+    {
+        fprintf(fp, "Nodes: %d, Edges: %d, phi: %.3f, Iterations: %d \n", NNodes, NEdges, phi, iterations);
+    }
     //print adj Matrix
     /*for (int i = 0; i < NNodes; ++i)
     {
@@ -1084,9 +1091,10 @@ void export_data(Graph * G, int_array * Checklist, int iterations, char* fname, 
                 //int curr_deg = G->NList[(Influencer->data[i])]->degree;
                 //int curr_op = G->NList[Influencer->data[i]]->opinion;
                 fprintf(fp, "%d ", Influencer->data[i]);
-            }    
+            }  
+    fprintf(fp, "\n");  
     }
-    fprintf(fp, "\n");
+    
 
     fclose(fp);
 }
