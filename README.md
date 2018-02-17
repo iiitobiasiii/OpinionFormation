@@ -21,8 +21,5 @@ data has format
 3 line: opinion vector (array of length NNodes, each entry represents the opinion attribute of the node in consensus state)
 4 line: connected component vector (array of length NNodes, each entry corresponds to the connected component a node belongs to)
 
-#Data
-Data is uploaded to https://drive.google.com/open?id=1D5sZ2V4XgTCjohx4wKyVJsCVxDuuqcrp
-
 
 
