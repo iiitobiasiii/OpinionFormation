@@ -1,4 +1,5 @@
-# OpinionFormation - Project for earth dynamics lecture 2017/2018 (Potsdam Institute of Climate Impact Research)
+# OpinionFormation
+### Project for earth dynamics lecture 2017/2018 @ Potsdam Institute for Climate Impact Research
 
 Opinion Formation on Adaptive Voter Model (AVM)
 based on ”Nonequilibrium phase transition in the
