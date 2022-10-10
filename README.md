@@ -1,5 +1,4 @@
-# OpinionFormation
-Project for earth dynamics lecture 2017/2018
+# OpinionFormation - Project for earth dynamics lecture 2017/2018 (Potsdam Institute of Climate Impact Research)
 
 Opinion Formation on Adaptive Voter Model (AVM)
 based on ”Nonequilibrium phase transition in the
@@ -7,11 +6,11 @@ coevolution of networks and opinions" by Holme, Newman (2006)
 
 We reproduce some results of the above paper and then modify by introducing zealots as done in "Zealotry Effects on Opinion Dynamics in the Adaptive Voter Model" by Klamser, Wiedemann (2017).
 
-# C_Execute.ipynb
+## C_Execute.ipynb
 Executes C Program with parameters that are in the arrays of this notebook.
 2nd cell does the same using multiprocessing
 
-# C Code:
+## C Code:
 Takes as arguments: NNodes, NEdges, NOpinions, phi100, MAX_ITER, ITER_Step, file name (max 20chars)
 exports data into file in ./data/filename.txt
 data has format
@@ -22,7 +21,7 @@ data has format
 
 
 
-# Further Ideas
+## Further Ideas
 - Upper limit for opinion changes for every node
 - Multiple Categories of Opinions, set of parameters with different weights
 - parameter that controls tendency to change opinion
